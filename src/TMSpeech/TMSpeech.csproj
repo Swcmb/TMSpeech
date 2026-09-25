@@ -104,5 +104,18 @@
     <Message Importance="high" Text="Copy plugins..." />
     <Exec Command="xcopy &quot;$(BuildPluginDir)&quot; &quot;$(PublishPluginDir)&quot; /E /Y /I /Q" />
   </Target>
-    
+
+  <!-- Copy external_recognizer scripts to publish output for Hy-MT2 usage -->
+  <Target Name="PublishExternalRecognizer" AfterTargets="PublishPlugins" Condition="Exists('$(MSBuildThisFileDirectory)..\..\external_recognizer')">
+    <ItemGroup>
+      <ExternalRecognizerFiles Include="$(MSBuildThisFileDirectory)..\..\external_recognizer\**\*" />
+    </ItemGroup>
+    <PropertyGroup>
+      <ExternalRecognizerDir>$(PublishDir)external_recognizer\</ExternalRecognizerDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(ExternalRecognizerDir)" />
+    <Copy SourceFiles="@(ExternalRecognizerFiles)" DestinationFiles="@(ExternalRecognizerFiles->'$(ExternalRecognizerDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="True" />
+    <Message Importance="low" Text="Copied external_recognizer scripts to publish directory" />
+  </Target>
+
 </Project>
