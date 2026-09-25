@@ -143,6 +143,82 @@ python .\external_recognizer\simulate-streaming-funasr-nano.py --provider cpu --
 说完并出现短暂停顿后一次性提交；这是为了避免 Nano 在 CPU 上持续重复推理。可以通过
 `--min-silence-duration` 和 `--max-speech-duration` 调整分段延迟与最长句长。
 
+### 使用 Hy-MT2-1.8B 实时翻译
+
+Hy-MT2-1.8B 是腾讯混元的轻量多语言翻译模型，可与 Fun-ASR-Nano 组合使用：Nano 负责语音识别（ASR），Hy-MT2 负责实时翻译，实现「语音→原文→译文」的一体化字幕。
+
+#### 安装依赖
+
+双击运行或手动执行：
+
+```powershell
+.\external_recognizer\install-hymt2.bat
+```
+
+或手动安装：
+
+```powershell
+# 方式一：transformers（推荐 GPU 用户）
+pip install transformers torch
+
+# 方式二：GGUF + llama.cpp（推荐 CPU 用户，模型仅约 440 MB）
+pip install llama-cpp-python
+```
+
+#### 下载模型
+
+| 模型 | 大小 | 适合场景 |
+|:---|:---|:---|
+| [Hy-MT2-1.8B (full)](https://huggingface.co/tencent/Hy-MT2-1.8B) | ~3.6 GB | GPU 推理 |
+| [Hy-MT2-1.8B-1.25bit-GGUF](https://huggingface.co/tencent/Hy-MT2-1.8B-1.25bit-GGUF) | ~440 MB | **CPU 推理（推荐）** |
+
+下载后放入 `external_recognizer/hy-mt2-1.8b/` 目录（transformers 格式）或任意路径（GGUF 格式）。
+
+#### 配置 TMSpeech
+
+在设置中选择 **"命令行识别器"**，填写：
+
+```text
+命令路径：C:\Path\to\python.exe
+命令参数：hy-mt2-translator.py --source-lang-name 中文 --target-lang-name 英语 --translator-backend transformers
+工作目录：C:\Path\to\TMSpeech\external_recognizer
+stderr保存：C:\Path\to\TMSpeechLogs\hymt2-error.log
+```
+
+GGUF 方式（CPU 推荐）：
+
+```text
+命令路径：C:\Path\to\python.exe
+命令参数：hy-mt2-translator.py --translator-backend gguf --hy-mt2-model hy-mt2-1.8b.gguf --source-lang-name 中文 --target-lang-name 英语
+工作目录：C:\Path\to\TMSpeech\external_recognizer
+```
+
+#### 支持的语言
+
+Hy-MT2 支持 33 种语言互译，包括中文、英语、日语、韩语、法语、德语、俄语等。
+使用 `--source-lang-name` 和 `--target-lang-name` 参数指定语言名称（如 `中文`、`英语`、`日本語`、`Français`、`Deutsch` 等），与模型训练时的语言名称保持一致。
+
+#### 命令行参数
+
+| 参数 | 说明 | 默认值 |
+|:---|:---|:---|
+| `--source-lang-name` | 源语言名称 | `中文` |
+| `--target-lang-name` | 目标语言名称 | `英语` |
+| `--translator-backend` | 翻译引擎 `transformers` / `gguf` | `transformers` |
+| `--hy-mt2-model` | 模型路径（transformers: 目录；gguf: .gguf 文件） | `hy-mt2-1.8b/` |
+| `--num-threads` | ASR 推理线程数 | `4` |
+| `--provider` | ASR 推理后端 `cpu` / `cuda` | `cpu` |
+| `--device-translator` | 翻译推理后端 `cpu` / `cuda` | `cpu` |
+| `--max-speech-duration` | 最长语音段（秒），影响翻译延迟 | `20.0` |
+| `--min-silence-duration` | 句子结束所需最短静音（秒） | `0.5` |
+
+#### 注意事项
+
+- **延迟**：翻译在 VAD 语音段结束后执行，因此字幕会在说完并停顿后出现。可通过 `--max-speech-duration` 调整。
+- **stderr 日志**：翻译模型的加载进度、错误信息会写入 stderr，可在 TMSpeech 配置的 LogFile 中查看。
+- **不打包模型**：Hy-MT2 模型文件不包含在发布包中，需用户自行下载。
+- **协议**：与 Fun-ASR-Nano 脚本相同，单换行更新临时结果，双换行表示句子完成。
+
 
 ## 我们需要你的反馈
 

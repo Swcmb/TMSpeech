@@ -1,0 +1,27 @@
+# Hy-MT2-1.8B Model Directory
+
+This directory should contain the Hy-MT2-1.8B model files.
+
+## Download
+
+**Transformers format:**
+1. Visit https://huggingface.co/tencent/Hy-MT2-1.8B
+2. Download all files using git-lfs or the "Download" button
+3. Place them in this directory
+
+Expected files:
+```
+hy-mt2-1.8b/
+├── config.json
+├── tokenizer_config.json
+├── tokenizer.model
+├── model-00001-of-00002.safetensors
+├── model-00002-of-00002.safetensors
+└── ...
+```
+
+**GGUF format (recommended for CPU):**
+1. Visit https://huggingface.co/tencent/Hy-MT2-1.8B-1.25bit-GGUF
+2. Download the `.gguf` file
+3. Rename and place it here as `hy-mt2-1.8b.gguf`
+4. In TMSpeech config, set `--translator-backend gguf` and `--hy-mt2-model hy-mt2-1.8b.gguf`
